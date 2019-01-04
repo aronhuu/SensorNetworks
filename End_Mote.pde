@@ -103,14 +103,32 @@ void loop()
 
     //To send via 802.15.4
     frame.createFrame(ASCII);
-    frame.addSensor(SENSOR_STR, "DataType");
+
+   // define local buffer for float to string conversion
+    char payload[100];
+    char temp_str[10];
+    char humd_str[10];
+    char pres_str[10];
+    
+    // use dtostrf() to convert from float to string: 
+    // '1' refers to minimum width
+    // '3' refers to number of decimals
+    dtostrf( temp, 1, 2, temp_str);
+    dtostrf( humd, 1, 2, humd_str);
+    dtostrf( pres, 1, 2, pres_str);
+    
+    snprintf((char *)payload, 100, "DataType, %s, %s, %s, %d, %d, %d, %d", temp_str, humd_str, pres_str, batteryLevel, ACC.getX(), ACC.getY(), ACC.getZ());
+    
+/*    frame.addSensor(SENSOR_STR, "DataType");
     frame.addSensor(SENSOR_TCA, temp); 
     frame.addSensor(SENSOR_HUMA, humd); 
     frame.addSensor(SENSOR_PA, pres); 
     frame.addSensor(SENSOR_BAT, batteryLevel); 
     frame.addSensor(SENSOR_ACC, ACC.getX()); //READ ACCELELROMETER VALUES
-//    frame.addSensor(SENSOR_ACC, ACC.getY());
+//  frame.addSensor(SENSOR_ACC, ACC.getY());
 //    frame.addSensor(SENSOR_ACC, ACC.getZ());
+*/
+    frame.addSensor(SENSOR_STR, payload);
     error = xbee802.send(RX_ADDRESS, frame.buffer, frame.length);
 
     if (error == 0) USB.println(F("SEND data OK"));
@@ -139,6 +157,8 @@ void loop()
     USB.print("Pressure: ");
     USB.printFloat(pres, 2); 
     USB.println(F(" Pa")); 
+    USB.printf("Battery: %d%%\n",batteryLevel);
+    USB.printf("Accelerometer [X, Y ,Z]: %d, %d, %d\n",ACC.getX(), ACC.getY(), ACC.getZ());
     USB.println("-----------------------------");  
     
     // blink LEDs
